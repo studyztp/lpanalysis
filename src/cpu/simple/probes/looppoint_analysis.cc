@@ -77,7 +77,7 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*, StaticInstPtr>& p) {
         // instuction, then we check if it jumps backward
         if(pcstate.npc() < pcstate.pc()){
             // If the current branch instruction jumps backward
-            // we send the target PC of this branch to the manager
+            // we send the destination PC of this branch to the manager
             manager->countPc(pcstate.npc());
         }
     }

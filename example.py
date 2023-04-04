@@ -42,7 +42,7 @@ for core in processor.get_cores():
     lplistener = LooppointAnalysis()
     lplistener.ptmanager = lpmanager
     lplistener.validAddrRangeStart = int("4045b0", 16)
-    lplistener.validAddrRangeSize = int("19b78b", 16)
+    lplistener.validAddrRangeSize = int("3d4", 16)
     core.core.probeListener = lplistener
 
 board = SimpleBoard(
