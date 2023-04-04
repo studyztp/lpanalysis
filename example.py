@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--binary",
-    default="/home/studyztp/test_ground/test-se-multithread/binary/diy/simple",
+    default="/home/studyztp/test_ground/test-se-multithread/binary/matrix-omp/matrix-omp",
     type=str,
     required=False,
     help="path to binary.",
@@ -41,8 +41,8 @@ lpmanager = LooppointAnalysisManager()
 for core in processor.get_cores():
     lplistener = LooppointAnalysis()
     lplistener.ptmanager = lpmanager
-    # lplistener.validAddrRangeStart = int("401160", 10)
-    # lplistener.validAddrRangeSize = int("19a8cb",16)
+    lplistener.validAddrRangeStart = int("4045b0", 16)
+    lplistener.validAddrRangeSize = int("19b78b", 16)
     core.core.probeListener = lplistener
 
 board = SimpleBoard(
@@ -57,10 +57,12 @@ board.set_se_binary_workload(
 
 def printsth():
     mostRecentPc = lpmanager.getMostRecentPc()
-    print("three most recent pc and its count at this spot")
+    print("The 5 most recent PCs encountered and their count")
     for pc in mostRecentPc:
         count = lpmanager.getPcCount(pc)
         print(f"pc:{hex(pc)} count{count}\n")
+    currentPc = lpmanager.getCurrentPc()
+    print(f"The current PC is {currentPc}\n")
     yield True
 
 
@@ -70,4 +72,5 @@ simulator = Simulator(
         ExitEvent.WORKEND: printsth()
     }
 )
+
 simulator.run()

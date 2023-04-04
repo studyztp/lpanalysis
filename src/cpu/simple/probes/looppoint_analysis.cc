@@ -45,10 +45,10 @@ LooppointAnalysis::LooppointAnalysis(const LooppointAnalysisParams &p)
 void
 LooppointAnalysis::regProbeListeners()
 {
-    // connect the probe listener with the probe "RetriedInstsPC" in the
+    // connect the probe listener with the probe "Commit" in the
     // corresponding core.
-    // when "RetiredInstsPC" notifies the probe listener, then the function
-    // 'check_pc' is automatically called
+    // when "Commit" notifies the probe listener, then the function
+    // 'checkPc' is automatically called
     typedef ProbeListenerArg<LooppointAnalysis, std::pair<SimpleThread*,StaticInstPtr>>
      LooppointAnalysisListener;
     listeners.push_back(new LooppointAnalysisListener(this, "Commit",
@@ -60,15 +60,26 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*, StaticInstPtr>& p) {
     SimpleThread* thread = p.first;
     const StaticInstPtr &inst = p.second;
     auto &pcstate = thread->getTC()->pcState().as<GenericISA::PCStateWithNext>();
+
     if (inst->isMicroop() && !inst->isLastMicroop())
         return;
+
     if(validAddrUpperBound!=0) {
+        // If there is a valid address range
         if(pcstate.pc() < validAddrLowerBound || pcstate.pc() > validAddrUpperBound)
+        // If the current PC is outside of the valid address range
+        // then we discard it
             return;
     }
+
     if (inst->isControl() && inst-> isDirectCtrl() && thread->getIsaPtr()->inUserMode()) {
-        if(pcstate.npc() < pcstate.pc())
+        // If the current instruction is a branch instruction and a User mode
+        // instuction, then we check if it jumps backward
+        if(pcstate.npc() < pcstate.pc()){
+            // If the current branch instruction jumps backward
+            // we send the target PC of this branch to the manager
             manager->countPc(pcstate.npc());
+        }
     }
 } 
 
@@ -83,16 +94,27 @@ void
 LooppointAnalysisManager::countPc(const Addr pc)
 {
     if (counter.find(pc) == counter.end()){
+        // If the PC is not in the counter
+        // then we insert it with a count of 0
         counter.insert(std::make_pair(pc,0));
     }
     else{
+        // If the PC is in the counter
+        // then we increment its count by 1
         ++counter.find(pc)->second;
     }
+    
     currentPc = pc;
+    // set the current PC as the newest incoming PC
+
     while (mostRecentPc.size() >= 5) {
+        // Make sure the mostRecentPc queue only stores the five most recent
+        // incoming PCs
         mostRecentPc.pop();
     }
+
     mostRecentPc.push(pc);
+    // record the most recent PC
 }
 
 }

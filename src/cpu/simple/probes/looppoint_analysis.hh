@@ -55,8 +55,12 @@ class LooppointAnalysis : public ProbeListenerObject
   private:
 
     LooppointAnalysisManager *manager;
+    
     Addr validAddrLowerBound;
+    // The lower bound of the valid instruction address range
+
     Addr validAddrUpperBound;
+    // The upper bound of the valid instruction address range
 };
 
 class LooppointAnalysisManager : public SimObject 
@@ -66,14 +70,15 @@ class LooppointAnalysisManager : public SimObject
     void countPc(Addr pc);
 
   private:
-    /**
-     * a set of Program Counter addresses that should notify the
-     * PcCounterTrackerManager for
-     */
-    std::map<Addr, int> counter;
-    std::queue<Addr> mostRecentPc;
-    Addr currentPc;
 
+    std::map<Addr, int> counter;
+    // The counter for all recorded PCs 
+
+    std::queue<Addr> mostRecentPc;
+    // Stores the 5 most recent incoming PCs
+
+    Addr currentPc;
+    // The most recent incoming PC
 
   public:
     std::map<Addr, int> 
