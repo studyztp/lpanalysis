@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--binary",
-    default="/home/studyztp/test_ground/test-se-multithread/binary/matrix-omp/matrix-omp",
+    default="/mnt/c/gem5-related/benchmark/matrix-omp/matrix-omp",
     type=str,
     required=False,
     help="path to binary.",
@@ -38,11 +38,13 @@ processor = SimpleProcessor(
 
 lpmanager = LooppointAnalysisManager()
 
+listenerid = 0
+
 for core in processor.get_cores():
     lplistener = LooppointAnalysis()
     lplistener.ptmanager = lpmanager
-    lplistener.validAddrRangeStart = int("4045b0", 16)
-    lplistener.validAddrRangeSize = int("3d4", 16)
+    lplistener.listenerId = listenerid
+    listenerid += 1
     core.core.probeListener = lplistener
 
 board = SimpleBoard(
@@ -63,6 +65,8 @@ def printsth():
         print(f"pc:{hex(pc)} count{count}\n")
     currentPc = lpmanager.getCurrentPc()
     print(f"The current PC is {currentPc}\n")
+    print("try test\n")
+    lpmanager.test()
     yield True
 
 

@@ -34,14 +34,21 @@
 
 #include "params/LooppointAnalysis.hh"
 #include "params/LooppointAnalysisManager.hh"
-#include "sim/probe/probe.hh"
-#include "cpu/simple_thread.hh"
+#include "sim/sim_exit.hh"
+// #include "sim/probe/probe.hh"
+// #include "cpu/simple_thread.hh"
 #include "arch/generic/pcstate.hh"
 #include "cpu/probes/pc_count_pair.hh"
 #include "debug/LooppointAnalysis.hh"
+#include "cpu/base.hh"
+#include "cpu/simple/probes/simpoint.hh"
+
 
 namespace gem5
 {
+
+typedef std::pair<int, int> BBinfo;
+typedef std::pair<Addr, Tick> NPCnTick;
 
 class LooppointAnalysis : public ProbeListenerObject
 {
@@ -55,19 +62,50 @@ class LooppointAnalysis : public ProbeListenerObject
   private:
 
     LooppointAnalysisManager *manager;
-    
+
     Addr validAddrLowerBound;
     // The lower bound of the valid instruction address range
 
     Addr validAddrUpperBound;
     // The upper bound of the valid instruction address range
+
+    int localInstCount;
+    int BBInstCounter;
+
+    BasicBlockRange currentBB;
+
+    std::map<BasicBlockRange, BBinfo> localBBmap;
+
+    std::queue<NPCnTick> mostRecentPc;
+
+  public:
+
+    std::vector<NPCnTick>
+    getMostRecentPc() const
+    {
+      std::vector<NPCnTick> mostRecentPcVector;
+      std::queue<NPCnTick> mostRecentPcCopy = mostRecentPc;
+      while (!mostRecentPcCopy.empty()) {
+        mostRecentPcVector.push_back(mostRecentPcCopy.front());
+        mostRecentPcCopy.pop();
+      }
+      return mostRecentPcVector;
+    }
+
+    std::map<BasicBlockRange, BBinfo>
+    getlocalBBmap() const
+    {
+      return localBBmap;
+    }
+
 };
 
 class LooppointAnalysisManager : public SimObject 
 {
   public:
     LooppointAnalysisManager(const LooppointAnalysisManagerParams &params);
-    void countPc(Addr pc);
+    void countPc(Addr pc, int instCount);
+    // void initListenerMap(int id, LooppointAnalysis* listenerAddr);
 
   private:
 
@@ -77,8 +115,14 @@ class LooppointAnalysisManager : public SimObject
     std::queue<Addr> mostRecentPc;
     // Stores the 5 most recent incoming PCs
 
+    int regionLength;
+
     Addr currentPc;
     // The most recent incoming PC
+
+    // std::map<int, LooppointAnalysis*> listenerMap;
+
+    int globalInstCount;
 
   public:
     std::map<Addr, int> 
@@ -96,23 +140,20 @@ class LooppointAnalysisManager : public SimObject
         return -1;
     }
 
-    std::vector<Addr>
-    getMostRecentPc() const
-    {
-      std::vector<Addr> mostRecentPcVector;
-      std::queue<Addr> mostRecentPcCopy = mostRecentPc;
-      while (!mostRecentPcCopy.empty()) {
-        mostRecentPcVector.push_back(mostRecentPcCopy.front());
-        mostRecentPcCopy.pop();
-      }
-      return mostRecentPcVector;
-    }
-
     Addr
     getCurrentPc() const
     {
       return currentPc;
     }
+
+    // void test() const {
+    //   int index = 0;
+    //   while(listenerMap.find(index)!=listenerMap.end()) {
+    //     LooppointAnalysis* ptr = listenerMap.find(index)->second;
+    //     printf("inst in listener %i : %i\n", index, ptr->getLocalInstCounter());
+    //     index ++;
+    //   }
+    // }
 
 };
 
